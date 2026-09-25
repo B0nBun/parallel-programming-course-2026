@@ -1,6 +1,8 @@
 .PHONY: build run run-all
 
 RUN_JAR=java -jar out/lab1.jar
+BENCHMARK_COLLECTORS=mutex empty-mutex striped-mutex thread-local double-buffer
+STRESS_COLLECTORS=mutex striped-mutex thread-local double-buffer
 
 build:
 	javac -d out/classes $$(find src -type f -name '*.java')
@@ -14,7 +16,7 @@ run: build
 
 benchmark: build
 	@$(RUN_JAR) --benchmark --collector single
-	@for collector in mutex empty-mutex striped-mutex thread-local; do \
+	@for collector in $(BENCHMARK_COLLECTORS); do \
 		i=1; \
 		while [ $$i -le $$(nproc) ]; do \
 			$(RUN_JAR) --benchmark --collector $$collector --threads $$i; \
@@ -23,6 +25,11 @@ benchmark: build
 	done
 
 stress: build
-	@$(RUN_JAR) --stress --threads $$(nproc) --collector mutex
-	@$(RUN_JAR) --stress --threads $$(nproc) --collector striped-mutex
-	@$(RUN_JAR) --stress --threads $$(nproc) --collector thread-local
+	@for collector in $(STRESS_COLLECTORS); do \
+		$(RUN_JAR) --stress --threads $$(nproc) --collector $$collector; \
+	done
+
+property: build
+	@for collector in $(STRESS_COLLECTORS); do \
+		$(RUN_JAR) --property --threads $$(nproc) --collector $$collector; \
+	done

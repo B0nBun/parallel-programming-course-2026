@@ -13,7 +13,7 @@ public class ThreadLocalCollector implements MetricsCollector {
     private final ThreadLocal<ThreadState> state = ThreadLocal.withInitial(() -> {
         ThreadState state = new ThreadState();
         synchronized (this.allStates) {
-            allStates.add(state);
+            this.allStates.add(state);
         }
         return state;
     });
@@ -54,7 +54,9 @@ public class ThreadLocalCollector implements MetricsCollector {
             min = Math.min(min, s.min.get());
             max = Math.max(max, s.max.get());
         }
-        long[] percentiles = Snapshot.percentiles(new double[]{0.5, 0.99}, buckets, count);
+        long[] percentiles = Snapshot.percentiles(buckets, count);
+        assert percentiles.length == 2 && percentiles[0] <= percentiles[1];
+
         return new Snapshot(buckets, count, sum, min, max, percentiles[0], percentiles[1]);
     }
 

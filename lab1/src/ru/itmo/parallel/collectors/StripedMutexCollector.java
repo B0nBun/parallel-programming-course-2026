@@ -59,26 +59,8 @@ public class StripedMutexCollector implements MetricsCollector {
 
         long count = this.count.get();
 
-        double threshold50 = count * 0.5;
-        long p50 = 0;
-        long accumulated = 0;
-        int i = 0;
-        for (;i < this.buckets.length; i ++) {
-            accumulated += bucketsCopy[i];
-            if (accumulated >= threshold50) {
-                p50 = accumulated;
-                break;
-            }
-        }
-        double threshold99 = count * 0.99;
-        long p99 = 0;
-        for (;i < this.buckets.length; i ++) {
-            accumulated += bucketsCopy[i];
-            if (accumulated >= threshold99) {
-                p99 = accumulated;
-                break;
-            }
-        }
+        long[] percentiles = Snapshot.percentiles(buckets, count);
+        assert percentiles.length == 2 && percentiles[0] <= percentiles[1];
 
         return new Snapshot(
             bucketsCopy,
@@ -86,8 +68,8 @@ public class StripedMutexCollector implements MetricsCollector {
             this.sum.get(),
             this.min.get(),
             this.max.get(),
-            p50,
-            p99
+            percentiles[0],
+            percentiles[1]
         );
     }
 

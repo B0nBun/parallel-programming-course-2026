@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 import java.util.function.Supplier;
 
+import ru.itmo.parallel.collectors.DoubleBufferCollector;
 import ru.itmo.parallel.collectors.EmptyMutexCollector;
 import ru.itmo.parallel.collectors.MutexCollector;
 import ru.itmo.parallel.collectors.StripedMutexCollector;
@@ -16,8 +17,6 @@ import ru.itmo.parallel.collectors.ThreadLocalCollector;
 import ru.itmo.parallel.collectors.SingleThreadedCollector;
 import ru.itmo.parallel.helper.SingleLinePrinter;
 import ru.itmo.parallel.helper.ZipfDistribution;
-
-// 4
 
 public class Main {
     private static final int SEED = 67;
@@ -31,7 +30,8 @@ public class Main {
         Map.entry("mutex",         MutexCollector::new),
         Map.entry("empty-mutex",   EmptyMutexCollector::new),
         Map.entry("striped-mutex", StripedMutexCollector::new),
-        Map.entry("thread-local",  ThreadLocalCollector::new)
+        Map.entry("thread-local",  ThreadLocalCollector::new),
+        Map.entry("double-buffer", DoubleBufferCollector::new)
     );
 
     public static void main(String args[]) throws InterruptedException {
@@ -62,7 +62,17 @@ public class Main {
             );
             return;
         }
-        throw new UnsupportedOperationException("specified test type is not implemented");
+        if (arguments.testType() == TestType.PROPERTY) {
+            MetricsCollector targetCollector = new SingleThreadedCollector();
+            Main.testAgainst(collector, targetCollector, values);
+            System.out.printf(
+                "Collector %s matches %s\n",
+                collector.getClass().getSimpleName(),
+                targetCollector.getClass().getSimpleName()
+            );
+            return;
+        }
+        throw new UnsupportedOperationException("specified test type is not implemented: " + arguments.testType());
     }
 
     private static record StressResult(
@@ -194,6 +204,41 @@ public class Main {
         long seconds = Duration.ofNanos(endTimeNs - startTimeNs).toSeconds();
         return Arrays.stream(operations).sum() / seconds;
     }
+
+    private static void testAgainst(
+        MetricsCollector actual,
+        MetricsCollector expected,
+        long[] values
+    ) {
+        for (int i = 0; i < values.length; i ++) {
+            long value = values[i];
+            expected.record(value);
+            actual.record(value);
+
+            if (i % 10 == 0) {
+                Main.assertSnapshotsEqual(actual, actual.snapshot(), expected.snapshot());
+            }
+            if (i % 100 == 0) { // occasional consequitive snapshots
+                Main.assertSnapshotsEqual(actual, actual.snapshot(), expected.snapshot());
+            }
+        }
+    }
+
+    private static void assertSnapshotsEqual(
+        MetricsCollector actualCollector,
+        Snapshot actual,
+        Snapshot expected
+    ) {
+        if (expected.equals(actual)) {
+            return;
+        }
+        throw new AssertionError(String.format(
+            "Snapshots are not equal:\n\texpected: %s\n\tactual: %s\n\tcollector:%s",
+            expected.toString(),
+            actual.toString(),
+            actualCollector.getClass().getSimpleName()
+        ));
+    }
     
     private static long[] generateValues(int seed) {
         var distribution = new ZipfDistribution(MAX_VALUE + 1, 1.15, new Random(seed));
@@ -217,7 +262,8 @@ public class Main {
 
 enum TestType {
     BENCHMARK,
-    STRESS
+    STRESS,
+    PROPERTY,
 };
 
 record Args(
@@ -225,7 +271,7 @@ record Args(
     int threads,
     TestType testType
 ) {
-    private static String USAGE = "./lab1.jar [--benchmark | --stress] [--threads N] --collector <name>";
+    private static String USAGE = "USAGE: ./lab1.jar {--benchmark | --stress | --property} [--threads N] --collector <name>";
 
     public static Args parse(String args[]) {
         try {
@@ -256,6 +302,9 @@ record Args(
                     break;
                 case "--stress":
                     testType = TestType.STRESS;
+                    break;
+                case "--property":
+                    testType = TestType.PROPERTY;
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown command line argument: " + args[i]);

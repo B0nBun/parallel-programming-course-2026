@@ -23,7 +23,8 @@ public class SingleThreadedCollector implements MetricsCollector {
     @Override
     public Snapshot snapshot() {
         long[] buckets = this.buckets.clone();
-        long[] percentiles = Snapshot.percentiles(new double[]{0.5, 0.99}, buckets, count);
+        long[] percentiles = Snapshot.percentiles(buckets, count);
+        assert percentiles.length == 2 && percentiles[0] <= percentiles[1];
 
         return new Snapshot(
             buckets,

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+import math
 import sys
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import LogLocator, ScalarFormatter
+from matplotlib.ticker import LogLocator, FuncFormatter
 
 
 def main():
@@ -53,34 +54,73 @@ def main():
         for values in data.values()
         for threads, _ in values
     })
-    plt.xticks(all_threads, [str(x) for x in all_threads])
 
-    # Use logarithmic Y axis.
+    plt.xticks(
+        all_threads,
+        [str(x) for x in all_threads],
+    )
+
     plt.yscale("log")
 
-    # More Y-axis ticks:
-    # Major ticks at 1, 2, 3, ... × powers of 10
-    # Minor ticks at 2, 3, ..., 9 × powers of 10.
     ax = plt.gca()
 
     ax.yaxis.set_major_locator(
-        LogLocator(base=10, subs=(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0))
+        LogLocator(
+            base=10,
+            subs=(1.0, 2.0, 5.0),
+        )
     )
 
     ax.yaxis.set_minor_locator(
         LogLocator(
             base=10,
-            subs=(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
+            subs=(3.0, 4.0, 6.0, 7.0, 8.0, 9.0),
         )
     )
 
-    # Show numeric labels instead of scientific notation.
-    ax.yaxis.set_major_formatter(ScalarFormatter())
-    ax.ticklabel_format(axis="y", style="plain")
+    all_ops = [
+        ops
+        for values in data.values()
+        for _, ops in values
+    ]
 
-    # Major and minor grid lines.
-    ax.grid(True, which="major", alpha=0.4)
-    ax.grid(True, which="minor", alpha=0.15)
+    max_ops = max(all_ops)
+
+    exponent = int(math.floor(math.log10(max_ops)))
+    scale = 10 ** exponent
+
+    def format_y(value, _position):
+        scaled = value / scale
+        return f"{scaled:g}"
+
+    ax.yaxis.set_major_formatter(
+        FuncFormatter(format_y)
+    )
+
+    ax.yaxis.set_minor_formatter(
+        FuncFormatter(lambda value, position: "")
+    )
+
+    ax.text(
+        0.0,
+        1.02,
+        rf"$\times 10^{{{exponent}}}$",
+        transform=ax.transAxes,
+        ha="left",
+        va="bottom",
+    )
+
+    ax.grid(
+        True,
+        which="major",
+        alpha=0.4,
+    )
+
+    ax.grid(
+        True,
+        which="minor",
+        alpha=0.15,
+    )
 
     plt.legend()
     plt.tight_layout()
