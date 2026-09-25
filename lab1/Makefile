@@ -1,5 +1,7 @@
 .PHONY: build run run-all
 
+RUN_JAR=java -jar out/lab1.jar
+
 build:
 	javac -d out/classes $$(find src -type f -name '*.java')
 	jar --create --file out/lab1.jar \
@@ -8,14 +10,19 @@ build:
 		.
 
 run: build
-	java -jar out/lab1.jar $(ARGS)
+	$(RUN_JAR) $(ARGS)
 
-run-all: build
-	java -jar out/lab1.jar --collector single
-	@for collector in mutex empty-mutex sharded-mutex; do \
+benchmark: build
+	@$(RUN_JAR) --benchmark --collector single
+	@for collector in mutex empty-mutex striped-mutex thread-local; do \
 		i=1; \
 		while [ $$i -le $$(nproc) ]; do \
-			java -jar out/lab1.jar --collector $$collector --threads $$i; \
+			$(RUN_JAR) --benchmark --collector $$collector --threads $$i; \
 			i=$$((i * 2)); \
 		done; \
 	done
+
+stress: build
+	@$(RUN_JAR) --stress --threads $$(nproc) --collector mutex
+	@$(RUN_JAR) --stress --threads $$(nproc) --collector striped-mutex
+	@$(RUN_JAR) --stress --threads $$(nproc) --collector thread-local

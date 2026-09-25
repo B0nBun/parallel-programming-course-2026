@@ -6,17 +6,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import ru.itmo.parallel.MetricsCollector;
 import ru.itmo.parallel.Snapshot;
 
-public class ShardedMutexCollector implements MetricsCollector {
+public class StripedMutexCollector implements MetricsCollector {
     private static final int BUCKET_GROUPS = 16;
     
-    ReentrantLock[] bucketLocks = new ReentrantLock[BUCKET_GROUPS];
-    long[] buckets = new long[Snapshot.BUCKETS_N];
-    AtomicLong min = new AtomicLong(Long.MAX_VALUE);
-    AtomicLong max = new AtomicLong(Long.MIN_VALUE);
-    AtomicLong sum = new AtomicLong(0);
-    AtomicLong count = new AtomicLong(0);
+    private final ReentrantLock[] bucketLocks = new ReentrantLock[BUCKET_GROUPS];
+    private final long[] buckets = new long[Snapshot.BUCKETS_N];
+    private final AtomicLong min = new AtomicLong(Long.MAX_VALUE);
+    private final AtomicLong max = new AtomicLong(Long.MIN_VALUE);
+    private final AtomicLong sum = new AtomicLong(0);
+    private final AtomicLong count = new AtomicLong(0);
 
-    public ShardedMutexCollector() {
+    public StripedMutexCollector() {
         for (int i = 0; i < this.bucketLocks.length; i ++) {
             this.bucketLocks[i] = new ReentrantLock();
         }
