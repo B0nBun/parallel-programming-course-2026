@@ -52,13 +52,13 @@ public class Main {
         if (arguments.testType() == TestType.STRESS) {
             StressResult result = Main.stress(collector, values, arguments.threads());
             System.out.printf(
-                "%s\t%d\tunder=%f eql=%f over=%f total_diff=%f\n",
+                "%s\t%d\tinvalid=%.01f%% (lt_count=%d gt_count=%d) total_diff=%d\n",
                 arguments.collectorName(),
                 arguments.threads(),
-                (double)result.lessInBuckets() / STRESS_SNAPSHOTS,
-                (double)result.equalToBuckets() / STRESS_SNAPSHOTS,
-                (double)result.moreInBuckets() / STRESS_SNAPSHOTS,
-                (double)(result.collectorCount() - result.threadsCount()) / result.threadsCount()
+                (double)(result.lessInBuckets() + result.moreInBuckets()) / STRESS_SNAPSHOTS * 100,
+                result.lessInBuckets(),
+                result.moreInBuckets(),
+                result.collectorCount() - result.threadsCount()
             );
             return;
         }

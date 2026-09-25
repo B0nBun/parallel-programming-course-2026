@@ -26,10 +26,10 @@ benchmark: build
 
 stress: build
 	@for collector in $(STRESS_COLLECTORS); do \
-		$(RUN_JAR) --stress --threads $$(nproc) --collector $$collector; \
+		$(RUN_JAR) --stress --threads 4 --collector $$collector; \
 	done
 
 property: build
 	@for collector in $(STRESS_COLLECTORS); do \
-		$(RUN_JAR) --property --threads $$(nproc) --collector $$collector; \
+		$(RUN_JAR) --property --collector $$collector; \
 	done
