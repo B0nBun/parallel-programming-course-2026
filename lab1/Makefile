@@ -1,7 +1,8 @@
 .PHONY: build run run-all
 
 RUN_JAR=java -jar out/lab1.jar
-BENCHMARK_COLLECTORS=mutex empty-mutex striped-mutex thread-local double-buffer
+# BENCHMARK_COLLECTORS=mutex empty-mutex striped-mutex thread-local double-buffer
+BENCHMARK_COLLECTORS=striped-mutex
 STRESS_COLLECTORS=mutex striped-mutex thread-local double-buffer
 
 build:

@@ -9,7 +9,7 @@ import ru.itmo.parallel.Snapshot;
 public class StripedMutexCollector implements MetricsCollector {
     private static final int BUCKET_GROUPS = 16;
     
-    private final ReentrantLock[] bucketLocks = new ReentrantLock[BUCKET_GROUPS];
+    private final Object[] bucketLocks = new Object[BUCKET_GROUPS];
     private final long[] buckets = new long[Snapshot.BUCKETS_N];
     private final AtomicLong min = new AtomicLong(Long.MAX_VALUE);
     private final AtomicLong max = new AtomicLong(Long.MIN_VALUE);
@@ -25,10 +25,9 @@ public class StripedMutexCollector implements MetricsCollector {
     @Override
     public void record(long value) {
         int bucket = Snapshot.bucket(value);
-        ReentrantLock lock = this.lockForBucket(bucket);
-        lock.lock();
-        this.buckets[bucket] += 1;
-        lock.unlock();
+        synchronized (this.lockForBucket(bucket)) {
+            this.buckets[bucket] += 1;
+        }
 
         this.sum.addAndGet(value);
         this.count.addAndGet(1);
@@ -49,12 +48,12 @@ public class StripedMutexCollector implements MetricsCollector {
     public Snapshot snapshot() {
         long[] bucketsCopy = new long[this.buckets.length];
         for (int i = 0; i < this.bucketLocks.length; i ++) {
-            this.bucketLocks[i].lock();
-            for (int j = i; j < this.buckets.length; j += this.bucketLocks.length) {
-                assert this.lockForBucket(j) == this.bucketLocks[i];
-                bucketsCopy[j] = this.buckets[j];
+            synchronized (this.bucketLocks[i]) {
+                for (int j = i; j < this.buckets.length; j += this.bucketLocks.length) {
+                    assert this.lockForBucket(j) == this.bucketLocks[i];
+                    bucketsCopy[j] = this.buckets[j];
+                }
             }
-            this.bucketLocks[i].unlock();
         }
 
         long count = this.count.get();
@@ -73,7 +72,7 @@ public class StripedMutexCollector implements MetricsCollector {
         );
     }
 
-    private ReentrantLock lockForBucket(int bucketIdx) {
+    private Object lockForBucket(int bucketIdx) {
         return this.bucketLocks[bucketIdx % BUCKET_GROUPS];
     }
 }

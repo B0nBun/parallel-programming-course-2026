@@ -9,11 +9,11 @@ empty-mutex     2       15799912
 empty-mutex     4       7809376
 empty-mutex     8       4194577
 empty-mutex     16      3827206
-striped-mutex   1       17496792
-striped-mutex   2       5105024
-striped-mutex   4       9203755
-striped-mutex   8       9528721
-striped-mutex   16      6807323
+striped-mutex   1       17520882
+striped-mutex   2       5616042
+striped-mutex   4       5466658
+striped-mutex   8       3717387
+striped-mutex   16      3697273
 thread-local    1       91523663
 thread-local    2       189714946
 thread-local    4       365332614
