@@ -19,12 +19,12 @@ import ru.itmo.parallel.helper.SingleLinePrinter;
 import ru.itmo.parallel.helper.ZipfDistribution;
 
 public class Main {
-    private static final int SEED = 67;
-    private static final int MAX_VALUE = 1023;
-    private static final long VALUES_N = 1 << 20;
+    private static final int SEED                 = 67;
+    private static final int MAX_VALUE            = 1023;
+    private static final long VALUES_N            = 1 << 20;
     private static final Duration MEASURE_RUNTIME = Duration.ofSeconds(5);
-    private static final int MEASURE_RUNS = 5;
-    private static final int STRESS_SNAPSHOTS = 10_000;
+    private static final int MEASURE_RUNS         = 5;
+    private static final int STRESS_SNAPSHOTS     = 10_000;
     private static final Map<String, Supplier<MetricsCollector>> collectors = Map.ofEntries(
         Map.entry("single",        SingleThreadedCollector::new),
         Map.entry("mutex",         MutexCollector::new),

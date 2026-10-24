@@ -10,11 +10,11 @@ public class StripedMutexCollector implements MetricsCollector {
     private static final int BUCKET_GROUPS = 16;
     
     private final Object[] bucketLocks = new Object[BUCKET_GROUPS];
-    private final long[] buckets = new long[Snapshot.BUCKETS_N];
-    private final AtomicLong min = new AtomicLong(Long.MAX_VALUE);
-    private final AtomicLong max = new AtomicLong(Long.MIN_VALUE);
-    private final AtomicLong sum = new AtomicLong(0);
-    private final AtomicLong count = new AtomicLong(0);
+    private final long[] buckets       = new long[Snapshot.BUCKETS_N];
+    private final AtomicLong min       = new AtomicLong(Long.MAX_VALUE);
+    private final AtomicLong max       = new AtomicLong(Long.MIN_VALUE);
+    private final AtomicLong sum       = new AtomicLong(0);
+    private final AtomicLong count     = new AtomicLong(0);
 
     public StripedMutexCollector() {
         for (int i = 0; i < this.bucketLocks.length; i ++) {

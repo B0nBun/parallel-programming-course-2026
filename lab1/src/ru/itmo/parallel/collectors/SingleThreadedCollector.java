@@ -5,10 +5,10 @@ import ru.itmo.parallel.Snapshot;
 
 public class SingleThreadedCollector implements MetricsCollector {
     private long[] buckets = new long[Snapshot.BUCKETS_N];
-    private long min = Long.MAX_VALUE;
-    private long max = Long.MIN_VALUE;
-    private long sum = 0;
-    private long count = 0;
+    private long min       = Long.MAX_VALUE;
+    private long max       = Long.MIN_VALUE;
+    private long sum       = 0;
+    private long count     = 0;
     
     @Override
     public void record(long value) {
